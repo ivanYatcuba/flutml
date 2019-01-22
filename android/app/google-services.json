@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "697169178453",
+    "firebase_url": "https://flutml.firebaseio.com",
+    "project_id": "flutml",
+    "storage_bucket": "flutml.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:697169178453:android:b42831c6e203e833",
+        "android_client_info": {
+          "package_name": "com.iyatsouba.flutml"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "697169178453-ou733if2b2gvfv6272niid8jqp08pqkp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXldet3L0OFlD3L8z_E3bDAr0GE9pUwLM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
