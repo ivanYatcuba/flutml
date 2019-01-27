@@ -27,7 +27,8 @@ dev_dependencies:
   firebase_analytics: ^1.0.4
   firebase_ml_vision: ^0.2.1
   path_provider: ^0.4.1
-
+  camera: ^0.3.0
+  rect_getter: ^0.0.1
 
 
 # For information on the generic Dart part of this file, see the
@@ -43,9 +44,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-   - samples/bruce.jpg
-   - samples/tom.jpg
-   - samples/donald.jpg
+  - samples/mustashe.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
