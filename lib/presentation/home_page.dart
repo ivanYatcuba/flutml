@@ -5,7 +5,6 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutml/face_decorator.dart';
 import 'package:flutml/face_detector_util.dart';
 import 'package:flutml/image_util.dart';
-import 'package:flutml/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -19,99 +18,159 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final ImageUtil imageUtil = ImageUtil();
+  final faceDetector = FaceDetectorUtil();
+
+  List<CameraDescription> cameras;
+
   List<Face> faces;
   ui.Image overlayImage;
   Size imageSize;
 
+  CameraLensDirection cameraLensDirection = CameraLensDirection.front;
   CameraController controller;
-
-  final ImageUtil imageUtil = ImageUtil();
-  final faceDetector = FaceDetectorUtil();
-
-  var initialized = false;
+  bool streamInitialized = false;
+  bool isDisposed = false;
 
   _MyHomePageState({this.faces});
 
   @override
   void initState() {
     super.initState();
-    final camera = cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front);
-    controller = CameraController(camera, ResolutionPreset.low);
-    _loadImage();
-    initializeController();
+    imageUtil.loadOverlayImage().then((image) {
+      setState(() {
+        overlayImage = image;
+      });
+    });
+    _initializeCamera();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (controller == null ||
+        isDisposed == true ||
+        !controller.value.isInitialized ||
+        !mounted) {
+      return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+          ),
+          body: _getLoadingView());
+    } else {
+      SchedulerBinding.instance
+          .addPostFrameCallback((_) => {_initializeVideoStream()
+    });
+    return
+    Scaffold
+    (
+    floatingActionButton
+        :
+    FloatingActionButton
+    (
+    onPressed
+        :
+    (
+    )
+    {
+    _switchCamera();
+    }
+    ,
+    child
+        :
+    _getFabIcon
+    (
+    )
+    ,
+    ),
+    body
+    :
+    _getCameraPreviewWidget
+    (
+    )
+    ,
+    );
+  }
+  }
+
+  Widget _getLoadingView() {
+    return Center(child: CircularProgressIndicator());
+  }
+
+  Widget _getCameraPreviewWidget() {
+    return Center(
+        child: Container(
+            foregroundDecoration: FaceDecoration(
+                imageSize,
+                faces,
+                overlayImage,
+                controller.value.aspectRatio,
+                cameraLensDirection == CameraLensDirection.front),
+            child: AspectRatio(
+                aspectRatio: controller.value.aspectRatio,
+                child: CameraPreview(controller))));
+  }
+
+  Icon _getFabIcon() {
+    if (cameraLensDirection == CameraLensDirection.front) {
+      return Icon(Icons.camera_rear);
+    } else {
+      return Icon(Icons.camera_front);
+    }
+  }
+
+  _switchCamera() {
+    if (cameraLensDirection == CameraLensDirection.front) {
+      cameraLensDirection = CameraLensDirection.back;
+    } else {
+      cameraLensDirection = CameraLensDirection.front;
+    }
+    setState(() {
+      isDisposed = true;
+    });
+    _initializeCamera().then((_) {
+      setState(() {
+        streamInitialized = false;
+        isDisposed = false;
+      });
+    });
+  }
+
+  Future _initializeCamera() async {
+    PreviousPointContainer.singleton.previousDrawRegion = null;
+    if (controller?.value?.isStreamingImages == true) {
+      await controller?.stopImageStream();
+    }
+    await controller?.dispose();
+
+    final cameras = await availableCameras();
+
+    final camera = cameras
+        .firstWhere((camera) => camera.lensDirection == cameraLensDirection);
+
+    controller = CameraController(camera, ResolutionPreset.high);
+
+    await controller.initialize();
+  }
+
+  void _initializeVideoStream() {
+    if (streamInitialized == false) {
+      streamInitialized = true;
+      controller.startImageStream((imageData) async {
+        final faces =
+        await faceDetector.getSample(imageData, cameraLensDirection);
+        if (faces != null) {
+          setState(() {
+            this.imageSize = faces.imageSize;
+            this.faces = faces.faces;
+          });
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     controller?.dispose();
     super.dispose();
-  }
-
-  var streamStarted = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: ValueListenableBuilder<CameraValue>(
-        valueListenable: controller,
-        builder: (context, value, child) {
-          if (value.isInitialized) {
-            SchedulerBinding.instance.addPostFrameCallback((_) {
-              if (!streamStarted) {
-                controller.startImageStream((imageData) {
-                  faceDetector.getSample(imageData).then((faces) {
-                    if (faces != null) {
-                      setState(() {
-                        this.imageSize = faces.imageSize;
-                        this.faces = faces.faces;
-                      });
-                    }
-                  });
-                });
-                streamStarted = true;
-              }
-            });
-            return getReadyForUseContent();
-          } else {
-            return Scaffold(
-                appBar: AppBar(
-                  title: Text(widget.title),
-                ),
-                body: Center(child: CircularProgressIndicator()));
-          }
-        },
-      ),
-    );
-  }
-
-  Widget getReadyForUseContent() {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.title),
-        ),
-        body: Center(
-          child: Container(
-              foregroundDecoration: FaceDecoration(
-                  imageSize, faces, overlayImage, controller.value.aspectRatio),
-              child: AspectRatio(
-                  aspectRatio: controller.value.aspectRatio,
-                  child: CameraPreview(controller))),
-        ));
-  }
-
-  Future initializeController() async {
-    if (!controller.value.isInitialized) {
-      await controller.initialize();
-      setState(() {});
-    }
-  }
-
-  _loadImage() {
-    ImageUtil()
-        .getAssetImage("samples/mustashe.png", ImageConfiguration())
-        .then((image) {
-      overlayImage = image;
-    });
   }
 }

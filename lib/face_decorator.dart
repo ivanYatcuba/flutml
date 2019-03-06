@@ -9,14 +9,15 @@ class FaceDecoration extends Decoration {
   final List<Face> faces;
   final ui.Image image;
   final aspectRatio;
+  final bool isFrontDirection;
 
-  FaceDecoration(
-      this.absoluteImageSize, this.faces, this.image, this.aspectRatio);
+  FaceDecoration(this.absoluteImageSize, this.faces, this.image,
+      this.aspectRatio, this.isFrontDirection);
 
   @override
   BoxPainter createBoxPainter([VoidCallback onChanged]) {
     return FaceDetectorPainter(
-        absoluteImageSize, faces, image, aspectRatio);
+        absoluteImageSize, faces, image, aspectRatio, isFrontDirection);
   }
 }
 
@@ -25,6 +26,7 @@ class FaceDetectorPainter extends BoxPainter {
   final List<Face> faces;
   final ui.Image image;
   final aspectRatio;
+  final bool isFrontDirection;
 
   final bool isDebug = false;
 
@@ -60,8 +62,8 @@ class FaceDetectorPainter extends BoxPainter {
 
   Point center;
 
-  FaceDetectorPainter(
-      this.absoluteImageSize, this.faces, this.image, this.aspectRatio);
+  FaceDetectorPainter(this.absoluteImageSize, this.faces, this.image,
+      this.aspectRatio, this.isFrontDirection);
 
   @override
   Future paint(
@@ -95,7 +97,10 @@ class FaceDetectorPainter extends BoxPainter {
       canvas.save();
       canvas.translate(configuration.size.width / 2 + offset.dx,
           configuration.size.height / 2 + offset.dy);
-      canvas.scale(-1, 1);
+      if (isFrontDirection) {
+        canvas.scale(-1, 1);
+      }
+
       for (Face face in faces) {
         if (isDebug) {
           print("z: " + face.headEulerAngleZ.toString());
@@ -127,16 +132,29 @@ class FaceDetectorPainter extends BoxPainter {
         final newWidth = image.width.toDouble() * scaleX2;
 
         final mouthX = landmarkNose.position.x +
-            (landmarkMouth.position.x - landmarkNose.position.x) * 1 / 4;
+            (landmarkMouth.position.x - landmarkNose.position.x) * 1 / 3;
 
         final mouthY = landmarkNose.position.y +
-            (landmarkMouth.position.y - landmarkNose.position.y) * 1 / 4;
+            (landmarkMouth.position.y - landmarkNose.position.y) * 1 / 3;
 
         final x = mouthX * scaleX + offset.dx - newWidth / 2 - center.x;
         final y = mouthY * scaleY + offset.dy - newHeight / 2 - center.y;
+        var currentRect = Rect.fromLTWH(x, y, newWidth, newHeight);
+        final previousRect =
+            PreviousPointContainer.singleton.previousDrawRegion;
+        if (previousRect != null) {
+          final p1 = Point(currentRect.topLeft.dx, currentRect.topLeft.dy);
+          final p2 = Point(previousRect.topLeft.dx, previousRect.topLeft.dy);
+          final distance = p1.distanceTo(p2);
+          if (distance < 10) {
+            currentRect = previousRect;
+          }
+        }
+
         var src = Rect.fromLTWH(
             0.0, 0.0, image.width.toDouble(), image.height.toDouble());
-        var dst = Rect.fromLTWH(x, y, newWidth, newHeight);
+        var dst = currentRect;
+        PreviousPointContainer.singleton.previousDrawRegion = dst;
 
         canvas.drawImageRect(image, src, dst, boundingRectPaint);
       }
@@ -222,4 +240,17 @@ class FaceDetectorPainter extends BoxPainter {
     return Offset(point.x * scaleX + offset.dx - center.x,
         point.y * scaleY + offset.dy - center.y);
   }
+}
+
+class PreviousPointContainer {
+  static final PreviousPointContainer singleton =
+  new PreviousPointContainer._internal();
+
+  Rect previousDrawRegion;
+
+  factory PreviousPointContainer() {
+    return singleton;
+  }
+
+  PreviousPointContainer._internal();
 }

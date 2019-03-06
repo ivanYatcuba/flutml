@@ -20,7 +20,8 @@ class FaceDetectorUtil {
 
   bool isDetectingAlready = false;
 
-  Future<DetectorResult> getSample(CameraImage cameraImage) async {
+  Future<DetectorResult> getSample(CameraImage cameraImage,
+      CameraLensDirection cameraDirection) async {
     if (isDetectingAlready) {
       return null;
     }
@@ -46,10 +47,17 @@ class FaceDetectorUtil {
       nextIndex += cameraImage.planes[i].bytes.length;
     }
 
+    ImageRotation rotation;
+    if (cameraDirection == CameraLensDirection.front) {
+      rotation = ImageRotation.rotation270;
+    } else {
+      rotation = ImageRotation.rotation90;
+    }
+
     FirebaseVisionImageMetadata metadata = FirebaseVisionImageMetadata(
         size: Size(cameraImage.width.toDouble(), cameraImage.height.toDouble()),
         rawFormat: cameraImage.format.raw,
-        rotation: ImageRotation.rotation270,
+        rotation: rotation,
         planeData: planeData);
 
     final visionImage = FirebaseVisionImage.fromBytes(allBytes, metadata);
