@@ -10,7 +10,7 @@ description: Sample app that yses firebas ML
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -27,8 +27,7 @@ dev_dependencies:
   firebase_analytics: ^1.0.4
   firebase_ml_vision: ^0.2.1
   path_provider: ^0.4.1
-  camera: ^0.3.0
-  rect_getter: ^0.0.1
+  camera: ^0.4.0+3
 
 
 # For information on the generic Dart part of this file, see the

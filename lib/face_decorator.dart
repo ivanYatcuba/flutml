@@ -15,7 +15,7 @@ class FaceDecoration extends Decoration {
 
   @override
   BoxPainter createBoxPainter([VoidCallback onChanged]) {
-    return new FaceDetectorPainter(
+    return FaceDetectorPainter(
         absoluteImageSize, faces, image, aspectRatio);
   }
 }
