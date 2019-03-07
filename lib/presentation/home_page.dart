@@ -5,8 +5,11 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutml/face_decorator.dart';
 import 'package:flutml/face_detector_util.dart';
 import 'package:flutml/image_util.dart';
+import 'package:flutml/presentation/image_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class CameraPage extends StatefulWidget {
   CameraPage({Key key, this.title}) : super(key: key);
@@ -27,7 +30,7 @@ class _CameraPageState extends State<CameraPage> {
   ui.Image overlayImage;
   Size imageSize;
 
-  CameraLensDirection cameraLensDirection = CameraLensDirection.front;
+  CameraLensDirection cameraLensDirection = CameraLensDirection.back;
   CameraController controller;
   bool streamInitialized = false;
   bool isDisposed = false;
@@ -51,9 +54,7 @@ class _CameraPageState extends State<CameraPage> {
         isDisposed == true ||
         !controller.value.isInitialized ||
         !mounted) {
-      return Scaffold(
-          appBar: _getAppBar(),
-          body: _getLoadingView());
+      return Scaffold(appBar: _getAppBar(), body: _getLoadingView());
     } else {
       SchedulerBinding.instance
           .addPostFrameCallback((_) =>
@@ -62,11 +63,33 @@ class _CameraPageState extends State<CameraPage> {
       });
       return Scaffold(
         appBar: _getAppBar(),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _switchCamera();
-          },
-          child: _getFabIcon(),
+        floatingActionButton: Row(
+          mainAxisSize: MainAxisSize.max,
+          verticalDirection: VerticalDirection.up,
+          children: <Widget>[
+            Expanded(
+              child: Container(
+                child: FloatingActionButton(
+                  heroTag: null,
+                  onPressed: () {
+                    _switchCamera();
+                  },
+                  child: _getFabIcon(),
+                ),
+              ),
+            ),
+            Expanded(
+              child: FloatingActionButton(
+                heroTag: null,
+                child: Icon(
+                  Icons.camera,
+                ),
+                onPressed: () async {
+                  await _takePicture();
+                },
+              ),
+            ),
+          ],
         ),
         body: _getCameraPreviewWidget(),
       );
@@ -81,6 +104,23 @@ class _CameraPageState extends State<CameraPage> {
 
   Widget _getLoadingView() {
     return Center(child: CircularProgressIndicator());
+  }
+
+  _takePicture() async {
+    //todo ios support
+    final directory = await getExternalStorageDirectory();
+    if (controller.value.isStreamingImages) {
+      await controller.stopImageStream();
+    }
+    try {
+      final picturePath = directory.path + "/" + Uuid().v1() + ".jpg";
+      await controller.takePicture(picturePath);
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (BuildContext context) =>
+              ImagePreview(filePath: picturePath)));
+    } catch (e) {}
+
+    streamInitialized = false;
   }
 
   Widget _getCameraPreviewWidget() {
