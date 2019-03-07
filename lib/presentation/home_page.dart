@@ -8,16 +8,16 @@ import 'package:flutml/image_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class CameraPage extends StatefulWidget {
+  CameraPage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _CameraPageState createState() => _CameraPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _CameraPageState extends State<CameraPage> {
   final ImageUtil imageUtil = ImageUtil();
   final faceDetector = FaceDetectorUtil();
 
@@ -32,7 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool streamInitialized = false;
   bool isDisposed = false;
 
-  _MyHomePageState({this.faces});
+  _CameraPageState({this.faces});
 
   @override
   void initState() {
@@ -52,9 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
         !controller.value.isInitialized ||
         !mounted) {
       return Scaffold(
-          appBar: AppBar(
-            title: Text(widget.title),
-          ),
+          appBar: _getAppBar(),
           body: _getLoadingView());
     } else {
       SchedulerBinding.instance
@@ -63,6 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _initializeVideoStream()
       });
       return Scaffold(
+        appBar: _getAppBar(),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             _switchCamera();
@@ -72,6 +71,12 @@ class _MyHomePageState extends State<MyHomePage> {
         body: _getCameraPreviewWidget(),
       );
     }
+  }
+
+  Widget _getAppBar() {
+    return AppBar(
+      title: Text(widget.title),
+    );
   }
 
   Widget _getLoadingView() {
@@ -129,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final camera = cameras
         .firstWhere((camera) => camera.lensDirection == cameraLensDirection);
 
-    controller = CameraController(camera, ResolutionPreset.high);
+    controller = CameraController(camera, ResolutionPreset.low);
 
     await controller.initialize();
   }

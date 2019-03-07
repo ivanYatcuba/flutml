@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.lightBlue[800],
         accentColor: Colors.cyan[600],
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: CameraPage(title: 'Mustache decorator'),
     );
   }
 }
