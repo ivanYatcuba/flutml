@@ -58,38 +58,20 @@ class _MyHomePageState extends State<MyHomePage> {
           body: _getLoadingView());
     } else {
       SchedulerBinding.instance
-          .addPostFrameCallback((_) => {_initializeVideoStream()
-    });
-    return
-    Scaffold
-    (
-    floatingActionButton
-        :
-    FloatingActionButton
-    (
-    onPressed
-        :
-    (
-    )
-    {
-    _switchCamera();
+          .addPostFrameCallback((_) =>
+      {
+      _initializeVideoStream()
+      });
+      return Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _switchCamera();
+          },
+          child: _getFabIcon(),
+        ),
+        body: _getCameraPreviewWidget(),
+      );
     }
-    ,
-    child
-        :
-    _getFabIcon
-    (
-    )
-    ,
-    ),
-    body
-    :
-    _getCameraPreviewWidget
-    (
-    )
-    ,
-    );
-  }
   }
 
   Widget _getLoadingView() {
